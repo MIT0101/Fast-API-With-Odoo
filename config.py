@@ -1,13 +1,22 @@
-import os
-from dotenv import load_dotenv
+from typing import Any
+from dotenv import dotenv_values
 
-# Load .env file
-load_dotenv()
+REQUIRED_ENV_VARS = {"ODOO_DB_NAME", "ODOO_CONFIG_PATH", "ODOO_REPO_PATH"}
+parsed_config = dotenv_values("./.env")
 
-## Odoo Server config
-ODOO_REPO_PATH = str(os.getenv("ODOO_REPO_PATH", "")).strip()
-ODOO_CONFIG_PATH = str(os.getenv("ODOO_CONFIG_PATH", "")).strip()
-ODOO_DB_NAME = str(os.getenv("ODOO_DB_NAME", "")).strip()
 
-assert ODOO_CONFIG_PATH, "ODOO_CONFIG_PATH is required"
-assert ODOO_DB_NAME, "ODOO_DB_NAME is required"
+def validate_config(config_vals: dict[str, Any]):
+    validated_config = {}
+    for var in REQUIRED_ENV_VARS:
+        value = config_vals.get(var)
+        if not value:
+            raise ValueError(f"The {var} ENV variable is required")
+        validated_config[var] = value
+    return validated_config
+
+
+config = dict(parsed_config)
+validated_config = validate_config(config)
+ODOO_REPO_PATH = config.get("ODOO_REPO_PATH")
+ODOO_CONFIG_PATH = config.get("ODOO_CONFIG_PATH")
+ODOO_DB_NAME = config.get("ODOO_DB_NAME")
